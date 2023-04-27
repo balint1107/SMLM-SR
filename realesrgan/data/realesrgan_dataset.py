@@ -51,7 +51,7 @@ class RealESRGANDataset(data.Dataset):
             # disk backend with meta_info
             # Each line in the meta_info describes the relative path to an image
             with open(self.opt['meta_info']) as fin:
-                paths = [line.strip().split(' ')[0] for line in fin]
+                paths = [line.strip() for line in fin]
                 self.paths = [os.path.join(self.gt_folder, v) for v in paths]
 
         # blur settings for the first degradation
@@ -76,7 +76,6 @@ class RealESRGANDataset(data.Dataset):
         self.final_sinc_prob = opt['final_sinc_prob']
 
         self.kernel_range = [2 * v + 1 for v in range(3, 11)]  # kernel size ranges from 7 to 21
-        # TODO: kernel range is now hard-coded, should be in the configure file
         self.pulse_tensor = torch.zeros(21, 21).float()  # convolving with pulse tensor brings no blurry effect
         self.pulse_tensor[10, 10] = 1
 
@@ -87,31 +86,15 @@ class RealESRGANDataset(data.Dataset):
         # -------------------------------- Load gt images -------------------------------- #
         # Shape: (h, w, c); channel order: BGR; image range: [0, 1], float32.
         gt_path = self.paths[index]
-        # avoid errors caused by high latency in reading files
-        retry = 3
-        while retry > 0:
-            try:
-                img_bytes = self.file_client.get(gt_path, 'gt')
-            except (IOError, OSError) as e:
-                logger = get_root_logger()
-                logger.warn(f'File client error: {e}, remaining retry times: {retry - 1}')
-                # change another file to read
-                index = random.randint(0, self.__len__())
-                gt_path = self.paths[index]
-                time.sleep(1)  # sleep 1s for occasional server congestion
-            else:
-                break
-            finally:
-                retry -= 1
-        img_gt = imfrombytes(img_bytes, float32=True)
 
-        # -------------------- Do augmentation for training: flip, rotation -------------------- #
-        img_gt = augment(img_gt, self.opt['use_hflip'], self.opt['use_rot'])
+        img_gt = np.load(gt_path)
 
-        # crop or pad to 400
-        # TODO: 400 is hard-coded. You may change it accordingly
+        # -------------------- augmentation for training: flip, rotation -------------------- #
+        img_gt = augment(np.squeeze(img_gt), self.opt['use_hflip'], self.opt['use_rot'])
+
+        # crop or pad to 400: 400 is hard-coded. You may change it accordingly
         h, w = img_gt.shape[0:2]
-        crop_pad_size = 400
+        crop_pad_size = 256
         # pad
         if h < crop_pad_size or w < crop_pad_size:
             pad_h = max(0, crop_pad_size - h)
@@ -181,7 +164,10 @@ class RealESRGANDataset(data.Dataset):
             sinc_kernel = self.pulse_tensor
 
         # BGR to RGB, HWC to CHW, numpy to tensor
-        img_gt = img2tensor([img_gt], bgr2rgb=True, float32=True)[0]
+        img_gt = img_gt.astype('float32')
+        img_gt = img_gt[np.newaxis, :, :]
+        img_gt = torch.from_numpy(img_gt)
+
         kernel = torch.FloatTensor(kernel)
         kernel2 = torch.FloatTensor(kernel2)
 

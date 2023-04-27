@@ -1,4 +1,7 @@
 import os
+import cv2
+import torch
+import numpy as np
 from basicsr.data.data_util import paired_paths_from_folder, paired_paths_from_lmdb
 from basicsr.data.transforms import augment, paired_random_crop
 from basicsr.utils import FileClient, imfrombytes, img2tensor
@@ -81,11 +84,13 @@ class RealESRGANPairedDataset(data.Dataset):
         # Load gt and lq images. Dimension order: HWC; channel order: BGR;
         # image range: [0, 1], float32.
         gt_path = self.paths[index]['gt_path']
-        img_bytes = self.file_client.get(gt_path, 'gt')
-        img_gt = imfrombytes(img_bytes, float32=True)
+        # img_bytes = self.file_client.get(gt_path, 'gt')
+        # img_gt = imfrombytes(img_bytes, float32=True)
+        img_gt = cv2.imread(gt_path, cv2.IMREAD_UNCHANGED)
         lq_path = self.paths[index]['lq_path']
-        img_bytes = self.file_client.get(lq_path, 'lq')
-        img_lq = imfrombytes(img_bytes, float32=True)
+        # img_bytes = self.file_client.get(lq_path, 'lq')
+        # img_lq = imfrombytes(img_bytes, float32=True)
+        img_lq = cv2.imread(lq_path, cv2.IMREAD_UNCHANGED)
 
         # augmentation for training
         if self.opt['phase'] == 'train':
@@ -95,8 +100,16 @@ class RealESRGANPairedDataset(data.Dataset):
             # flip, rotation
             img_gt, img_lq = augment([img_gt, img_lq], self.opt['use_hflip'], self.opt['use_rot'])
 
+
         # BGR to RGB, HWC to CHW, numpy to tensor
-        img_gt, img_lq = img2tensor([img_gt, img_lq], bgr2rgb=True, float32=True)
+        img_gt = img_gt.astype('float32')
+        img_gt = img_gt[np.newaxis, :, :]
+        img_gt = torch.from_numpy(img_gt)
+        img_lq = img_lq.astype('float32')
+        img_lq = img_lq[np.newaxis, :, :]
+        img_lq = torch.from_numpy(img_lq)
+        # img_gt, img_lq = img2tensor([img_gt, img_lq], bgr2rgb=True, float32=True)
+
         # normalize
         if self.mean is not None or self.std is not None:
             normalize(img_lq, self.mean, self.std, inplace=True)
