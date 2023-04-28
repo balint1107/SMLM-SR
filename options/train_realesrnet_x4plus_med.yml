@@ -36,9 +36,9 @@ datasets:
   train:
     name: SMLM
     type: RealESRGANPairedDataset
-    dataroot_gt: dataset/smlm/smlm_dataset
-    dataroot_lq: dataset/smlm/smlm_dataset
-    meta_info: dataset/smlm/meta_info_smlm_pair.txt
+    dataroot_gt: dataset/smlm/train
+    dataroot_lq: dataset/smlm/train
+    meta_info: dataset/smlm/meta_info/meta_info_SMLM_sub_pair.txt
     io_backend:
       type: disk
 
@@ -75,8 +75,8 @@ datasets:
   val:
     name: validation
     type: RealESRGANPairedDataset
-    dataroot_gt: dataset/smlm/smlm_val/gt
-    dataroot_lq: dataset/smlm/smlm_val/lr
+    dataroot_gt: dataset/smlm/test/gt
+    dataroot_lq: dataset/smlm/test/lr
     io_backend:
       type: disk
     use_shuffle: true
@@ -149,11 +149,11 @@ val:
 
 # logging settings
 logger:
-  print_freq: 1000
+  print_freq: 100
   save_checkpoint_freq: !!float 10e3
   use_tb_logger: true
   wandb:
-    project: sr-test
+    project: sr-sub
     resume_id: ~
 
 # dist training settings
