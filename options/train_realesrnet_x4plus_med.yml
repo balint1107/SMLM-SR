@@ -38,7 +38,7 @@ datasets:
     type: RealESRGANPairedDataset
     dataroot_gt: dataset/smlm/train
     dataroot_lq: dataset/smlm/train
-    meta_info: dataset/smlm/meta_info/meta_info_SMLM_sub_pair.txt
+    meta_info: dataset/smlm/meta_info/meta_info_smlm_sub_pair.txt
     io_backend:
       type: disk
 
@@ -96,7 +96,7 @@ network_g:
 
 # path
 path:
-  pretrain_network_g: experiments/pretrained_models/pretrained_model_esrgan.pth
+  pretrain_network_g: experiments/pretrained_models/pretrained_model_esrgan_g.pth
   param_key_g: params_ema
   strict_load_g: false
   resume_state: ~

@@ -41,7 +41,7 @@ datasets:
     type: RealESRGANPairedDataset
     dataroot_gt: dataset/smlm/train
     dataroot_lq: dataset/smlm/train
-    meta_info: dataset/smlm/meta_info/meta_info_SMLM_sub_pair.txt
+    meta_info: dataset/smlm/meta_info/meta_info_smlm_sub_pair.txt
     io_backend:
       type: disk
 
@@ -70,7 +70,7 @@ datasets:
     # data loader
     use_shuffle: true
     num_worker_per_gpu: 2
-    batch_size_per_gpu: 16s
+    batch_size_per_gpu: 1
     dataset_enlarge_ratio: 1
     prefetch_mode: ~
 
@@ -107,9 +107,13 @@ network_d:
 # path
 path:
   pretrain_network_g: experiments/train_RealESRNET_SMLM/models/net_g_100000.pth
+  # pretrain_network_g: experiments/pretrained_models/pretrained_model_esrgan_g.pth
   param_key_g: params_ema
   #strict_load_g: true
   strict_load_g: false #using this as using scale 8
+  pretrain_network_d: experiments/pretrained_models/pretrained_model_esrgan_d.pth
+  param_key_d: params
+  strict_load_d: false
   resume_state: ~
 
 # training settings
